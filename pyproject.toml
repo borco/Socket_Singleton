@@ -54,3 +54,13 @@ known_first_party = ["Socket_Singleton"]
 line_length = 100
 profile = "black"
 skip_glob = ["*/__pycache__/*", "*/build/*", "*/dist/*"]
+
+[dependency-groups]
+dev = [
+  "pytest>=7.4.4",
+]
+
+[tool.pytest.ini_options]
+log_cli = true
+log_level = "NOTSET"
+testpaths = ["tests"]

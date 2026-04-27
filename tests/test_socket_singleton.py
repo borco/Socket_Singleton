@@ -11,6 +11,7 @@ Tests are organized into separate classes by concern:
 
 import socket
 import unittest
+from pathlib import Path
 from subprocess import PIPE, STDOUT, Popen, run
 from time import sleep
 
@@ -36,7 +37,8 @@ def run_test_app(command, wait=True, capture_output=False):
     Returns:
         CompletedProcess if wait=True, Popen if wait=False
     """
-    cmd = f"python test_app.py {command}"
+    app_path = Path(__file__).parent / "helper_app.py"
+    cmd = f"python {app_path} {command}"
 
     if wait:
         return run(cmd, shell=True, capture_output=True, text=True)
@@ -836,5 +838,5 @@ class TestConcurrency(unittest.TestCase):
             self.assertTrue(found, f"Missing arguments from rapid{i}")
 
 
-if __name__ == "__main__":
-    unittest.main()
+# if __name__ == "__main__":
+#     unittest.main()

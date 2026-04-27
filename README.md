@@ -1,18 +1,22 @@
-## Socket_Singleton.py
+# Socket_Singleton.py
 
-### Socket-based, single-instance Python applications with a clean interface
+Socket-based, single-instance Python applications with a clean interface.
 
-###### _Without lockfiles, mutexes, dependencies, or tomfoolery_
+_Without lockfiles, mutexes, dependencies, or tomfoolery._
 
-### Installation & Basic Usage
+## Installation & Basic Usage
 
 **Install:**
 
-`pip install Socket_Singleton -U`
+```bash
+pip install Socket_Singleton -U
+```
 
 **Import:**
 
-`from Socket_Singleton import Socket_Singleton`
+```python
+from Socket_Singleton import Socket_Singleton
+```
 
 **Basic Usage:**
 
@@ -253,7 +257,6 @@ app = Socket_Singleton(secret=secret)
 
 **Important:** Both host and client processes must use the same `secret` value. If they don't match, the client's arguments will be ignored.
 
-
 ## Methods
 
 ### `trace(observer, *args, **kwargs)`
@@ -267,6 +270,7 @@ When you register an observer with `trace()`, you can optionally provide additio
 **Observer signature:**
 
 Your observer callback receives arguments in this order:
+
 1. **First parameter**: A tuple containing all arguments from a single client process
 2. **Followed by**: Any `*args` you provided to `trace()` (unpacked)
 3. **Followed by**: Any `**kwargs` you provided to `trace()` (unpacked)
@@ -407,7 +411,6 @@ An integer property describing how many client processes have connected since in
 print(f"Connected clients: {app.clients}")
 ```
 
-
 ## Context Manager
 
 The context manager protocol is implemented for automatic resource cleanup:
@@ -427,43 +430,35 @@ with Socket_Singleton() as ss:
 
 The port is automatically released when exiting the `with` block.
 
-
 ## Testing
 
-The project includes a comprehensive test suite using Python's built-in `unittest` framework.
+The project includes a comprehensive test suite using `pytest`.
 
 **Run all tests:**
 
 ```bash
-python -m unittest tests
-```
-
-**Run tests with verbose output:**
-
-```bash
-python -m unittest -v tests
+pytest
 ```
 
 **Run a specific test class:**
 
 ```bash
-python -m unittest tests.TestInProcess
-python -m unittest tests.TestArgumentPassing
-python -m unittest tests.TestConcurrency
+pytest tests/test_socket_singleton.py::TestInProcess
 ```
 
 **Run a specific test method:**
 
 ```bash
-python -m unittest tests.TestArgumentPassing.test_multiple_observers
+pytest tests/test_socket_singleton.py::TestInProcess::test_arguments_with_newlines
 ```
 
 **Test structure:**
 
-- `tests.py` - Main test suite with organized test classes
-- `test_app.py` - Helper script for subprocess-based tests
+- `test_socket_singleton.py` - Main test suite with organized test classes
+- `helper_app.py` - Helper script for subprocess-based tests
 
 Tests are organized by concern:
+
 - **TestInProcess**: Fast in-process tests (properties, trace/untrace, context manager)
 - **TestSingletonEnforcement**: Singleton behavior requiring separate processes
 - **TestArgumentPassing**: Argument passing between processes
