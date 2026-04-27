@@ -59,7 +59,7 @@ The interpreter exits immediately and we end up back at the prompt.
 
 **See also:**
 
-[Common TCP/UDP Port Numbers](https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers)  
+[Common TCP/UDP Port Numbers](https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers)
 [Windows Socket Error Code 10048](https://learn.microsoft.com/en-us/windows/win32/winsock/windows-sockets-error-codes-2#WSAEADDRINUSE)
 
 It is recommended to specify a port in the constructor\*
