@@ -249,7 +249,7 @@ secret = os.getenv("SOCKET_SINGLETON_SECRET")
 app = Socket_Singleton(secret=secret)
 ```
 
-**How it works interally:**
+**How it works internally:**
 
 - If `secret` is `None` (default): No verification - any connection is accepted by the host
 - If `secret` is provided to the host: Clients must send the secret as the first part of their message over the socket (before a null byte `\x00`), followed by arguments from their process
@@ -390,7 +390,6 @@ And in a new shell (after `release()` was called):
 - **Manual control**: Useful for more complex scenarios where you need fine-grained control over when the singleton releases the port.
 - **Context manager alternative**: For most use cases, the context manager protocol (see below) is cleaner and automatically handles cleanup.
 - **Timer cancellation**: If a timeout was set, calling `release()` will cancel it prematurely.
-
 
 ## Properties
 
