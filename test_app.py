@@ -2,7 +2,7 @@ import sys
 from sys import argv
 from time import sleep
 
-from src.Socket_Singleton import MultipleSingletonsError, Socket_Singleton
+from Socket_Singleton import MultipleSingletonsError, Socket_Singleton
 
 # This file is used for the test cases in test.py and for manual
 # debugging / testing, primarily as a subprocess helper.

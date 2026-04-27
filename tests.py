@@ -14,7 +14,7 @@ import unittest
 from subprocess import PIPE, STDOUT, Popen, run
 from time import sleep
 
-from src.Socket_Singleton import MultipleSingletonsError, Socket_Singleton
+from Socket_Singleton import MultipleSingletonsError, Socket_Singleton
 
 
 def get_free_port():

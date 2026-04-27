@@ -1,6 +1,7 @@
 import errno
 from socket import socket
 from sys import argv
+from typing import Any, Callable
 from threading import Thread, Timer
 
 _WSAEADDRINUSE = 10048
@@ -87,7 +88,7 @@ class Socket_Singleton:
         # Internally, this functions as a queue. See self.arguments() for external access.
         # Note: Host's own arguments are not stored here - only arguments from client processes.
         self._arguments: list[tuple[str, ...]] = []
-        self._observers = {}
+        self._observers: dict[Callable, tuple[tuple[Any, ...], dict[str, Any]]] = {}
         self._clients = 0
         self._listening = False
         self._thread = None
@@ -316,7 +317,7 @@ class Socket_Singleton:
                         f"raised exception: {type(exc).__name__}: {exc}"
                     )
 
-    def trace(self, observer, *args, **kwargs) -> None:
+    def trace(self, observer: Callable, *args: Any, **kwargs: Any) -> None:
         """
         Register an observer callback to receive arguments from client processes.
 
@@ -341,7 +342,7 @@ class Socket_Singleton:
 
         self._observers[observer] = (args, kwargs)
 
-    def untrace(self, observer) -> None:
+    def untrace(self, observer: Callable) -> None:
         """Detach (unsubscribe) a callback. Does nothing if the observer is not registered."""
 
         self._observers.pop(observer, None)
