@@ -1,6 +1,7 @@
 import errno
 from socket import socket
 from sys import argv
+from typing import Any, Callable
 from threading import Thread, Timer
 
 _WSAEADDRINUSE = 10048
@@ -33,6 +34,9 @@ class Socket_Singleton:
         secret: Optional secret string for client verification. If provided, clients
             must send this secret before their arguments. Defaults to None (no verification).
             Useful for preventing unauthorized applications from injecting arguments.
+        trace_no_args: If False (the default), the trace callbacks will not be executed
+            when a client process is called without any args. If True, the trace callbacks
+            will be executed even if the client process is called with no args.
     """
 
     def __init__(
@@ -45,8 +49,9 @@ class Socket_Singleton:
         release_threshold: int = 0,
         max_clients: int = 0,
         verbose: bool = False,
-        secret: str = None,
-    ):
+        secret: str | None = None,
+        trace_no_args: bool = False,
+    ) -> None:
         """
         Initialize the singleton instance.
 
@@ -73,6 +78,7 @@ class Socket_Singleton:
         self.max_clients = int(max_clients)
         self.verbose = bool(verbose)
         self.secret = str(secret) if secret is not None else None
+        self.trace_no_args = bool(trace_no_args)
 
         if not (0 <= self.port <= 65535):
             raise ValueError("port must be between 0 and 65535 (inclusive)")
@@ -86,8 +92,8 @@ class Socket_Singleton:
         # Store arguments as tuples - each tuple represents one client's complete argument set
         # Internally, this functions as a queue. See self.arguments() for external access.
         # Note: Host's own arguments are not stored here - only arguments from client processes.
-        self._arguments = []
-        self._observers = {}
+        self._arguments: list[tuple[str, ...]] = []
+        self._observers: dict[Callable, tuple[tuple[Any, ...], dict[str, Any]]] = {}
         self._clients = 0
         self._listening = False
         self._thread = None
@@ -105,13 +111,13 @@ class Socket_Singleton:
                 self._create_client()
 
             if self.strict:
-                raise SystemExit
-            else:
-                raise MultipleSingletonsError(
-                    "\nApplication is already bound & listening "
-                    f"@ {self.address} on port {self.port}. Multiple "
-                    f"instances are disallowed in the current context."
-                ) from None
+                raise SystemExit from err
+
+            raise MultipleSingletonsError(
+                "\nApplication is already bound & listening "
+                f"@ {self.address} on port {self.port}. Multiple "
+                f"instances are disallowed in the current context."
+            ) from None
 
         else:
             self._listening = True
@@ -122,12 +128,12 @@ class Socket_Singleton:
             if self.timeout > 0:
                 self._timer.start()
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Human-readable string representation."""
 
         return f"Socket_Singleton(address={self.address!r}, port={self.port})"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Unambiguous string representation for developers.
 
@@ -165,7 +171,7 @@ class Socket_Singleton:
         self.release()
         return False
 
-    def _create_server(self):
+    def _create_server(self) -> None:
         """
         Server thread that listens for client connections and processes arguments.
 
@@ -220,7 +226,7 @@ class Socket_Singleton:
 
                             # Filter out empty strings
                             args = tuple(arg for arg in parts if arg)
-                            if args:
+                            if args or self.trace_no_args:
                                 self._append_args(args)
                         except (UnicodeDecodeError, AttributeError):
                             # Invalid data received - skip this client's arguments
@@ -229,9 +235,8 @@ class Socket_Singleton:
                                     f"Socket_Singleton: Failed to decode data from client "
                                     f"on port {self.port}, skipping arguments"
                                 )
-                            pass
 
-    def _create_client(self):
+    def _create_client(self) -> None:
         """
         Client behavior when port is already bound.
 
@@ -244,7 +249,7 @@ class Socket_Singleton:
                 sock.connect((self.address, self.port))
                 # Build message: secret (if required) + arguments, joined by null bytes
                 # Use null byte (\x00) as delimiter to avoid issues with newlines
-                parts = []
+                parts: list[str] = []
                 if self.secret is not None:
                     parts.append(self.secret)
                 parts.extend(argv[1:])
@@ -270,9 +275,8 @@ class Socket_Singleton:
                     f"Socket_Singleton: Failed to connect to existing instance "
                     f"on {self.address}:{self.port} (port may have been released)"
                 )
-            pass
 
-    def _append_args(self, args):
+    def _append_args(self, args: tuple[str, ...]) -> None:
         """
         Append a complete argument set from a client to the queue and notify observers.
         """
@@ -280,7 +284,7 @@ class Socket_Singleton:
         self._arguments.append(args)
         self._update_observers()
 
-    def _update_observers(self):
+    def _update_observers(self) -> None:
         """
         Publish the most recent argument set to all registered observers.
 
@@ -317,9 +321,8 @@ class Socket_Singleton:
                         f"Socket_Singleton: Observer {observer_name} "
                         f"raised exception: {type(exc).__name__}: {exc}"
                     )
-                pass
 
-    def trace(self, observer, *args, **kwargs):
+    def trace(self, observer: Callable, *args: Any, **kwargs: Any) -> None:
         """
         Register an observer callback to receive arguments from client processes.
 
@@ -344,12 +347,12 @@ class Socket_Singleton:
 
         self._observers[observer] = (args, kwargs)
 
-    def untrace(self, observer):
+    def untrace(self, observer: Callable) -> None:
         """Detach (unsubscribe) a callback. Does nothing if the observer is not registered."""
 
         self._observers.pop(observer, None)
 
-    def release(self):
+    def release(self) -> None:
         """
         Release the port, allowing other instances to bind.
 
@@ -366,7 +369,7 @@ class Socket_Singleton:
 
         self._listening = False
 
-        if hasattr(self, "_timer"):
+        if hasattr(self, "_timer") and self._timer is not None:
             self._timer.cancel()
 
         # No new arguments will arrive after release
@@ -385,7 +388,7 @@ class Socket_Singleton:
             pass
 
     @property
-    def arguments(self):
+    def arguments(self) -> tuple[tuple[str, ...], ...]:
         """
         Read-only snapshot of arguments received from client processes.
 
@@ -401,7 +404,7 @@ class Socket_Singleton:
         return tuple(self._arguments)
 
     @property
-    def clients(self):
+    def clients(self) -> int:
         """
         Number of client processes that have connected since this singleton was created.
 

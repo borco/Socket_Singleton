@@ -1,18 +1,22 @@
-## Socket_Singleton.py
+# Socket_Singleton.py
 
-### Socket-based, single-instance Python applications with a clean interface
+Socket-based, single-instance Python applications with a clean interface.
 
-###### _Without lockfiles, mutexes, dependencies, or tomfoolery_
+_Without lockfiles, mutexes, dependencies, or tomfoolery._
 
-### Installation & Basic Usage
+## Installation & Basic Usage
 
 **Install:**
 
-`pip install Socket_Singleton -U`
+```bash
+pip install Socket_Singleton -U
+```
 
 **Import:**
 
-`from Socket_Singleton import Socket_Singleton`
+```python
+from Socket_Singleton import Socket_Singleton
+```
 
 **Basic Usage:**
 
@@ -59,7 +63,7 @@ The interpreter exits immediately and we end up back at the prompt.
 
 **See also:**
 
-[Common TCP/UDP Port Numbers](https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers)  
+[Common TCP/UDP Port Numbers](https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers)
 [Windows Socket Error Code 10048](https://learn.microsoft.com/en-us/windows/win32/winsock/windows-sockets-error-codes-2#WSAEADDRINUSE)
 
 It is recommended to specify a port in the constructor\*
@@ -245,14 +249,13 @@ secret = os.getenv("SOCKET_SINGLETON_SECRET")
 app = Socket_Singleton(secret=secret)
 ```
 
-**How it works interally:**
+**How it works internally:**
 
 - If `secret` is `None` (default): No verification - any connection is accepted by the host
 - If `secret` is provided to the host: Clients must send the secret as the first part of their message over the socket (before a null byte `\x00`), followed by arguments from their process
 - Invalid secrets are silently ignored (or logged if `verbose=True`)
 
 **Important:** Both host and client processes must use the same `secret` value. If they don't match, the client's arguments will be ignored.
-
 
 ## Methods
 
@@ -267,6 +270,7 @@ When you register an observer with `trace()`, you can optionally provide additio
 **Observer signature:**
 
 Your observer callback receives arguments in this order:
+
 1. **First parameter**: A tuple containing all arguments from a single client process
 2. **Followed by**: Any `*args` you provided to `trace()` (unpacked)
 3. **Followed by**: Any `**kwargs` you provided to `trace()` (unpacked)
@@ -387,7 +391,6 @@ And in a new shell (after `release()` was called):
 - **Context manager alternative**: For most use cases, the context manager protocol (see below) is cleaner and automatically handles cleanup.
 - **Timer cancellation**: If a timeout was set, calling `release()` will cancel it prematurely.
 
-
 ## Properties
 
 ### `arguments`
@@ -406,7 +409,6 @@ An integer property describing how many client processes have connected since in
 ```python
 print(f"Connected clients: {app.clients}")
 ```
-
 
 ## Context Manager
 
@@ -427,43 +429,35 @@ with Socket_Singleton() as ss:
 
 The port is automatically released when exiting the `with` block.
 
-
 ## Testing
 
-The project includes a comprehensive test suite using Python's built-in `unittest` framework.
+The project includes a comprehensive test suite using `pytest`.
 
 **Run all tests:**
 
 ```bash
-python -m unittest tests
-```
-
-**Run tests with verbose output:**
-
-```bash
-python -m unittest -v tests
+pytest
 ```
 
 **Run a specific test class:**
 
 ```bash
-python -m unittest tests.TestInProcess
-python -m unittest tests.TestArgumentPassing
-python -m unittest tests.TestConcurrency
+pytest tests/test_socket_singleton.py::TestInProcess
 ```
 
 **Run a specific test method:**
 
 ```bash
-python -m unittest tests.TestArgumentPassing.test_multiple_observers
+pytest tests/test_socket_singleton.py::TestInProcess::test_arguments_with_newlines
 ```
 
 **Test structure:**
 
-- `tests.py` - Main test suite with organized test classes
-- `test_app.py` - Helper script for subprocess-based tests
+- `test_socket_singleton.py` - Main test suite with organized test classes
+- `helper_app.py` - Helper script for subprocess-based tests
 
 Tests are organized by concern:
+
 - **TestInProcess**: Fast in-process tests (properties, trace/untrace, context manager)
 - **TestSingletonEnforcement**: Singleton behavior requiring separate processes
 - **TestArgumentPassing**: Argument passing between processes
