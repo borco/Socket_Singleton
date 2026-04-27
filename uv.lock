@@ -1,0 +1,8 @@
+version = 1
+revision = 3
+requires-python = ">=3.7"
+
+[[package]]
+name = "socket-singleton"
+version = "2.0.1"
+source = { editable = "." }
