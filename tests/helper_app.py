@@ -2,7 +2,7 @@ import sys
 from sys import argv
 from time import sleep
 
-from Socket_Singleton import MultipleSingletonsError, Socket_Singleton
+from socket_singleton import MultipleSingletonsError, SocketSingleton
 
 # This file is used for the test cases in test.py and for manual
 # debugging / testing, primarily as a subprocess helper.
@@ -30,9 +30,9 @@ def default(port=None):
     # Create singleton - it will read the modified argv[1:]
     try:
         if port is not None:
-            Socket_Singleton(port=port)
+            SocketSingleton(port=port)
         else:
-            Socket_Singleton()
+            SocketSingleton()
     finally:
         # Note: We don't restore argv here because the modification is intentional
         # and needed for _create_client() to send the correct arguments
@@ -42,7 +42,7 @@ def default(port=None):
 
 
 def timeout(seconds, port):
-    Socket_Singleton(timeout=seconds, port=port)
+    SocketSingleton(timeout=seconds, port=port)
 
 
 def callback(args_tuple):
@@ -51,7 +51,7 @@ def callback(args_tuple):
 
 def trace(seconds):
     # Manual testing helper - blocks thread on purpose
-    app = Socket_Singleton()
+    app = SocketSingleton()
     print("Singleton locked")
     app.trace(callback)
     sleep(seconds)
@@ -60,9 +60,9 @@ def trace(seconds):
 def no_strict(port=None):
     try:
         if port is not None:
-            Socket_Singleton(port=port, strict=False)
+            SocketSingleton(port=port, strict=False)
         else:
-            Socket_Singleton(strict=False)
+            SocketSingleton(strict=False)
         print("Singleton locked")
 
     except MultipleSingletonsError:
@@ -70,7 +70,7 @@ def no_strict(port=None):
 
 
 def release(seconds, port):
-    app = Socket_Singleton(port=port)
+    app = SocketSingleton(port=port)
     app.release()
     sleep(seconds)
 
@@ -86,7 +86,7 @@ def verbose_host(port, wait_seconds=1):
     def bad_callback(args_tuple):
         raise ValueError("Intentional test exception")
 
-    app = Socket_Singleton(port=port, verbose=True)
+    app = SocketSingleton(port=port, verbose=True)
     app.trace(bad_callback)
     print("Host ready")
     # Keep running momentarily to receive client connections
@@ -94,7 +94,7 @@ def verbose_host(port, wait_seconds=1):
 
 
 def context():
-    with Socket_Singleton():
+    with SocketSingleton():
         print("Singleton locked")
 
 
@@ -111,13 +111,13 @@ def no_client(port=None):
 
     # Create singleton with client=False
     if port is not None:
-        Socket_Singleton(port=port, client=False)
+        SocketSingleton(port=port, client=False)
     else:
-        Socket_Singleton(client=False)
+        SocketSingleton(client=False)
 
 
 def max_clients():
-    app = Socket_Singleton(max_clients=3)
+    app = SocketSingleton(max_clients=3)
     app.trace(callback)
     input()
 
@@ -181,7 +181,7 @@ def main():
         verbose_host(port, wait_seconds)
     elif command == "debug":
         # Debug block - hardcode your debugging scenario here for use with a debugger:
-        Socket_Singleton()
+        SocketSingleton()
 
 
 if __name__ == "__main__":

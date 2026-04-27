@@ -1,4 +1,4 @@
-# Socket_Singleton.py
+# socket_singleton
 
 Socket-based, single-instance Python applications with a clean interface.
 
@@ -15,20 +15,20 @@ pip install Socket_Singleton -U
 **Import:**
 
 ```python
-from Socket_Singleton import Socket_Singleton
+from socket_singleton import SocketSingleton
 ```
 
 **Basic Usage:**
 
 ```python
 # Simple singleton enforcement
-Socket_Singleton()
+SocketSingleton()
 ```
 
 or, keep a reference:
 
 ```python
-app = Socket_Singleton()
+app = SocketSingleton()
 ```
 
 **Basic Example:**
@@ -38,8 +38,8 @@ We have an application, `app.py` that we want to restrict to a single instance:
 ```python
 #app.py
 
-from Socket_Singleton import Socket_Singleton
-Socket_Singleton()
+from socket_singleton import SocketSingleton
+SocketSingleton()
 input()  # Blocking call to simulate your_business_logic()
 ```
 
@@ -72,7 +72,7 @@ It is recommended to specify a port in the constructor\*
 
 **Constructor:**
 
-`Socket_Singleton(address="127.0.0.1", port=1337, timeout=0, client=True, strict=True, release_threshold=0, max_clients=0, verbose=False, secret=None)`
+`SocketSingleton(address="127.0.0.1", port=1337, timeout=0, client=True, strict=True, release_threshold=0, max_clients=0, verbose=False, secret=None)`
 
 ### `address`
 
@@ -82,9 +82,9 @@ The IP address to bind the socket to. Defaults to `"127.0.0.1"` (localhost). Thi
 
 ```python
 # Binds to localhost - machine-wide singleton
-app = Socket_Singleton()
+app = SocketSingleton()
 # or explicitly:
-app = Socket_Singleton(address="127.0.0.1")
+app = SocketSingleton(address="127.0.0.1")
 ```
 
 **Multi-homed systems example:**
@@ -97,10 +97,10 @@ On a system with multiple network interfaces, you can create separate singleton 
 # Interface 2: 10.0.0.50 (VPN network)
 
 # Internal network singleton
-internal_app = Socket_Singleton(address="192.168.1.100", port=1337)
+internal_app = SocketSingleton(address="192.168.1.100", port=1337)
 
 # VPN network singleton (separate instance)
-vpn_app = Socket_Singleton(address="10.0.0.50", port=1337)
+vpn_app = SocketSingleton(address="10.0.0.50", port=1337)
 
 # These can coexist because they're on different interfaces!
 ```
@@ -111,13 +111,13 @@ In containerized environments, you might want per-container singletons:
 
 ```python
 # Container A
-app_a = Socket_Singleton(address="172.17.0.2", port=1337)
+app_a = SocketSingleton(address="172.17.0.2", port=1337)
 
 # Container B
-app_b = Socket_Singleton(address="172.17.0.3", port=1337)
+app_b = SocketSingleton(address="172.17.0.3", port=1337)
 
 # Host machine
-host_app = Socket_Singleton(address="127.0.0.1", port=1337)
+host_app = SocketSingleton(address="127.0.0.1", port=1337)
 
 # All three can run simultaneously on different addresses
 ```
@@ -128,7 +128,7 @@ You can bind to all available interfaces using `"0.0.0.0"`:
 
 ```python
 # Binds to all network interfaces
-app = Socket_Singleton(address="0.0.0.0", port=1337)
+app = SocketSingleton(address="0.0.0.0", port=1337)
 ```
 
 Note: For most applications, the default `127.0.0.1` (localhost) is what you want - a machine-wide singleton instance. The `address` parameter provides flexibility for specialized network configurations.
@@ -150,11 +150,11 @@ If `False`, client processes won't send arguments to the host. Defaults to `True
 If `False`, raises `MultipleSingletonsError` instead of `SystemExit` when a second instance tries to run. Defaults to `True`.
 
 ```python
-from Socket_Singleton import Socket_Singleton, MultipleSingletonsError
+from socket_singleton import SocketSingleton, MultipleSingletonsError
 
 def main():
     try:
-        app = Socket_Singleton(strict=False)
+        app = SocketSingleton(strict=False)
     except MultipleSingletonsError as err:
         print("We are not the singleton.")
         print(err)
@@ -173,7 +173,7 @@ Release the port after this many client connections. Defaults to `0` (never rele
 
 ```python
 # Stop accepting connections after 10 clients
-app = Socket_Singleton(release_threshold=10)
+app = SocketSingleton(release_threshold=10)
 ```
 
 ### `max_clients`
@@ -182,7 +182,7 @@ Stop processing arguments after this many client connections. Defaults to `0` (p
 
 ```python
 # Rate limit: ignore arguments after 5 clients, but keep accepting connections
-app = Socket_Singleton(max_clients=5)
+app = SocketSingleton(max_clients=5)
 ```
 
 **Combined usage:**
@@ -191,7 +191,7 @@ You can use both parameters together for more complex scenarios:
 
 ```python
 # Throttle arguments at 5 clients, stop accepting at 10 clients
-app = Socket_Singleton(max_clients=5, release_threshold=10)
+app = SocketSingleton(max_clients=5, release_threshold=10)
 ```
 
 **Important:** When using both parameters together:
@@ -206,10 +206,10 @@ Enable verbose output for debugging. When `True`, prints warnings for connection
 
 ```python
 # Silent operation (default)
-app = Socket_Singleton()
+app = SocketSingleton()
 
 # Verbose mode - prints warnings for errors
-app = Socket_Singleton(verbose=True)
+app = SocketSingleton(verbose=True)
 ```
 
 **When verbose mode is enabled, you'll see warnings for:**
@@ -225,28 +225,28 @@ Optional secret string for client verification. If provided, clients must send t
 
 **Security Note:**
 
-By default, `Socket_Singleton` accepts connections from any process that can connect to the port. This is fine for localhost-only singleton enforcement, but if you're concerned about unauthorized applications connecting and injecting arguments, you can use the `secret` parameter.
+By default, `SocketSingleton` accepts connections from any process that can connect to the port. This is fine for localhost-only singleton enforcement, but if you're concerned about unauthorized applications connecting and injecting arguments, you can use the `secret` parameter.
 
 **Basic usage:**
 
 ```python
 # Host process
-app = Socket_Singleton(secret="my-secret-key")
+app = SocketSingleton(secret="my-secret-key")
 app.trace(callback)
 
 # Client processes (must use same secret)
-Socket_Singleton(secret="my-secret-key")  # Will send secret + args from the process
+SocketSingleton(secret="my-secret-key")  # Will send secret + args from the process
 ```
 
 **Using environment variables:**
 
 ```python
 import os
-from Socket_Singleton import Socket_Singleton
+from socket_singleton import SocketSingleton
 
 # Read secret from environment variable
 secret = os.getenv("SOCKET_SINGLETON_SECRET")
-app = Socket_Singleton(secret=secret)
+app = SocketSingleton(secret=secret)
 ```
 
 **How it works internally:**
@@ -280,7 +280,7 @@ Your observer callback receives arguments in this order:
 ```python
 #app.py
 
-from Socket_Singleton import Socket_Singleton
+from socket_singleton import SocketSingleton
 
 def callback(client_args, prefix="Received: "):
     # client_args is a tuple like ("foo", "bar", "baz")
@@ -289,7 +289,7 @@ def callback(client_args, prefix="Received: "):
     # do_a_thing(client_args)
 
 def main():
-    app = Socket_Singleton()
+    app = SocketSingleton()
     app.trace(callback, prefix=">>> ")  # Store "prefix" to be passed later
     input()  # Blocking call to simulate your_business_logic()
 
@@ -356,10 +356,10 @@ Release the port, allowing other instances to bind. Stops the server thread, can
 ```python
 #app.py
 
-from Socket_Singleton import Socket_Singleton
+from socket_singleton import SocketSingleton
 
 def main():
-    app = Socket_Singleton()
+    app = SocketSingleton()
     # Do some work...
     app.release()  # Release the port, allowing other instances to run
     print("Port released - other instances can now bind!")
@@ -415,14 +415,14 @@ print(f"Connected clients: {app.clients}")
 The context manager protocol is implemented for automatic resource cleanup:
 
 ```python
-with Socket_Singleton():
+with SocketSingleton():
     input()  # Blocking call to simulate your_business_logic()
 ```
 
-`Socket_Singleton.__enter__()` returns `self` so you can have access to the object if needed:
+`SocketSingleton.__enter__()` returns `self` so you can have access to the object if needed:
 
 ```python
-with Socket_Singleton() as ss:
+with SocketSingleton() as ss:
     ss.trace(callback)
     input()  # Blocking call to simulate your_business_logic()
 ```

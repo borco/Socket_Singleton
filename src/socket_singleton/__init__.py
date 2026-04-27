@@ -7,7 +7,7 @@ from threading import Thread, Timer
 _WSAEADDRINUSE = 10048
 
 
-class Socket_Singleton:
+class SocketSingleton:
     """
     Enforces a single instance of a Python application using socket binding.
 

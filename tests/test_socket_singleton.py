@@ -15,7 +15,7 @@ from pathlib import Path
 from subprocess import PIPE, STDOUT, Popen, run
 from time import sleep
 
-from Socket_Singleton import MultipleSingletonsError, Socket_Singleton
+from socket_singleton import MultipleSingletonsError, SocketSingleton
 
 
 def get_free_port():
@@ -55,7 +55,7 @@ class TestInProcess(unittest.TestCase):
     def setUp(self):
         """Use a unique port for each test to avoid conflicts."""
         self.port = get_free_port()
-        self.app = Socket_Singleton(port=self.port)
+        self.app = SocketSingleton(port=self.port)
         self.traced_args = []
 
     def tearDown(self):
@@ -138,12 +138,12 @@ class TestInProcess(unittest.TestCase):
     def test_context_manager(self):
         """Test context manager protocol."""
         port = get_free_port()
-        with Socket_Singleton(port=port) as app:
+        with SocketSingleton(port=port) as app:
             self.assertTrue(app._listening)
-            self.assertIsInstance(app, Socket_Singleton)
+            self.assertIsInstance(app, SocketSingleton)
 
         # Should be able to bind again
-        app2 = Socket_Singleton(port=port)
+        app2 = SocketSingleton(port=port)
         self.assertTrue(app2._listening)
         app2.release()
 
@@ -153,7 +153,7 @@ class TestInProcess(unittest.TestCase):
         secret = "test-secret-123"
 
         # Create host with secret
-        host = Socket_Singleton(port=port, secret=secret)
+        host = SocketSingleton(port=port, secret=secret)
         received_args = []
 
         def callback(args_tuple):
@@ -202,7 +202,7 @@ class TestInProcess(unittest.TestCase):
     def test_arguments_with_newlines(self):
         """Test that arguments containing newlines are handled correctly."""
         port = get_free_port()
-        host = Socket_Singleton(port=port)
+        host = SocketSingleton(port=port)
         received_args = []
 
         def callback(args_tuple):
@@ -236,7 +236,7 @@ class TestInProcess(unittest.TestCase):
     def test_string_representations(self):
         """Test __str__ and __repr__ methods."""
         port = get_free_port()
-        app = Socket_Singleton(port=port, timeout=10, verbose=True)
+        app = SocketSingleton(port=port, timeout=10, verbose=True)
 
         # Test __str__ - should be human-readable
         str_repr = str(app)
@@ -274,7 +274,7 @@ class TestInProcess(unittest.TestCase):
         app.release()
 
         # Test __repr__ with secret (should be masked)
-        app_with_secret = Socket_Singleton(port=get_free_port(), secret="my-secret")
+        app_with_secret = SocketSingleton(port=get_free_port(), secret="my-secret")
         repr_with_secret = repr(app_with_secret)
         self.assertIn("secret=***", repr_with_secret)  # Secret should be masked
         self.assertNotIn("my-secret", repr_with_secret)  # Actual secret should not appear
@@ -287,25 +287,25 @@ class TestValidation(unittest.TestCase):
     def test_invalid_port_too_low(self):
         """Test that port < 0 raises ValueError."""
         with self.assertRaises(ValueError) as context:
-            Socket_Singleton(port=-1)
+            SocketSingleton(port=-1)
         self.assertIn("port must be between 0 and 65535", str(context.exception))
 
     def test_invalid_port_too_high(self):
         """Test that port > 65535 raises ValueError."""
         with self.assertRaises(ValueError) as context:
-            Socket_Singleton(port=65536)
+            SocketSingleton(port=65536)
         self.assertIn("port must be between 0 and 65535", str(context.exception))
 
     def test_invalid_timeout(self):
         """Test that timeout < 0 raises ValueError."""
         with self.assertRaises(ValueError) as context:
-            Socket_Singleton(port=get_free_port(), timeout=-1)
+            SocketSingleton(port=get_free_port(), timeout=-1)
         self.assertIn("timeout must be greater than or equal to 0", str(context.exception))
 
     def test_invalid_release_threshold(self):
         """Test that release_threshold < 0 raises ValueError."""
         with self.assertRaises(ValueError) as context:
-            Socket_Singleton(port=get_free_port(), release_threshold=-1)
+            SocketSingleton(port=get_free_port(), release_threshold=-1)
         self.assertIn(
             "release_threshold must be greater than or equal to 0", str(context.exception)
         )
@@ -313,7 +313,7 @@ class TestValidation(unittest.TestCase):
     def test_invalid_max_clients(self):
         """Test that max_clients < 0 raises ValueError."""
         with self.assertRaises(ValueError) as context:
-            Socket_Singleton(port=get_free_port(), max_clients=-1)
+            SocketSingleton(port=get_free_port(), max_clients=-1)
         self.assertIn("max_clients must be greater than or equal to 0", str(context.exception))
 
 
@@ -324,7 +324,7 @@ class TestSingletonEnforcement(unittest.TestCase):
         """Use a unique port for each test."""
         self.port = get_free_port()
         # Create a singleton in this process
-        self.app = Socket_Singleton(port=self.port)
+        self.app = SocketSingleton(port=self.port)
 
     def tearDown(self):
         """Clean up after each test."""
@@ -377,7 +377,7 @@ class TestSingletonEnforcement(unittest.TestCase):
         # Try to create another instance in the same process with strict=False
         # This should raise MultipleSingletonsError
         with self.assertRaises(MultipleSingletonsError) as context:
-            Socket_Singleton(port=self.port, strict=False)
+            SocketSingleton(port=self.port, strict=False)
 
         # Verify the error message
         self.assertIn("already bound & listening", str(context.exception))
@@ -394,7 +394,7 @@ class TestArgumentPassing(unittest.TestCase):
     def setUp(self):
         """Set up singleton with observer."""
         self.port = get_free_port()
-        self.app = Socket_Singleton(port=self.port)
+        self.app = SocketSingleton(port=self.port)
         self.received_args = []
 
         def callback(args_tuple):
@@ -443,7 +443,7 @@ class TestArgumentPassing(unittest.TestCase):
         self.app.release()
 
         # Create new host singleton (normal, client=True doesn't matter for host)
-        self.app = Socket_Singleton(port=self.port)
+        self.app = SocketSingleton(port=self.port)
         self.received_args = []
 
         def callback(args_tuple):
@@ -639,7 +639,7 @@ class TestThresholds(unittest.TestCase):
         def callback(args_tuple):
             self.received_args.append(args_tuple)
 
-        self.app = Socket_Singleton(port=self.port)
+        self.app = SocketSingleton(port=self.port)
         self.app.trace(callback)
 
     def tearDown(self):
@@ -652,7 +652,7 @@ class TestThresholds(unittest.TestCase):
         self.app.release()
 
         # Create new singleton with max_clients=2
-        self.app = Socket_Singleton(port=self.port, max_clients=2)
+        self.app = SocketSingleton(port=self.port, max_clients=2)
         self.received_args = []
 
         def callback(args_tuple):
@@ -675,7 +675,7 @@ class TestThresholds(unittest.TestCase):
         self.app.release()
 
         # Create singleton with release_threshold=2
-        self.app = Socket_Singleton(port=self.port, release_threshold=2)
+        self.app = SocketSingleton(port=self.port, release_threshold=2)
         self.received_args = []
 
         def callback(args_tuple):
@@ -700,7 +700,7 @@ class TestThresholds(unittest.TestCase):
         # release_threshold=5: release port after 5 clients
         # This tests that max_clients stops processing args, but connections continue
         # until release_threshold is reached
-        self.app = Socket_Singleton(port=self.port, max_clients=3, release_threshold=5)
+        self.app = SocketSingleton(port=self.port, max_clients=3, release_threshold=5)
         self.received_args = []
 
         def callback(args_tuple):
@@ -736,7 +736,7 @@ class TestConcurrency(unittest.TestCase):
     def setUp(self):
         """Set up singleton with observer."""
         self.port = get_free_port()
-        self.app = Socket_Singleton(port=self.port)
+        self.app = SocketSingleton(port=self.port)
         self.received_args = []
 
         def callback(args_tuple):
