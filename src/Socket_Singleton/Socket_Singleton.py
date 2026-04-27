@@ -34,6 +34,9 @@ class Socket_Singleton:
         secret: Optional secret string for client verification. If provided, clients
             must send this secret before their arguments. Defaults to None (no verification).
             Useful for preventing unauthorized applications from injecting arguments.
+        trace_no_args: If False (the default), the trace callbacks will not be executed
+            when a client process is called without any args. If True, the trace callbacks
+            will be executed even if the client process is called with no args.
     """
 
     def __init__(
@@ -47,6 +50,7 @@ class Socket_Singleton:
         max_clients: int = 0,
         verbose: bool = False,
         secret: str | None = None,
+        trace_no_args: bool = False,
     ) -> None:
         """
         Initialize the singleton instance.
@@ -74,6 +78,7 @@ class Socket_Singleton:
         self.max_clients = int(max_clients)
         self.verbose = bool(verbose)
         self.secret = str(secret) if secret is not None else None
+        self.trace_no_args = bool(trace_no_args)
 
         if not (0 <= self.port <= 65535):
             raise ValueError("port must be between 0 and 65535 (inclusive)")
@@ -221,7 +226,7 @@ class Socket_Singleton:
 
                             # Filter out empty strings
                             args = tuple(arg for arg in parts if arg)
-                            if args:
+                            if args or self.trace_no_args:
                                 self._append_args(args)
                         except (UnicodeDecodeError, AttributeError):
                             # Invalid data received - skip this client's arguments
